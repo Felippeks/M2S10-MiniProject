@@ -32,6 +32,18 @@ public class MedicoController {
         return convertToResponseDTO(medicoService.createMedico(medico));
     }
 
+    @PutMapping("/{id}")
+    public MedicoResponseDTO updateMedico(@PathVariable Long id, @RequestBody MedicoRequestDTO medicoRequestDTO) {
+        Medico medico = convertToEntity(medicoRequestDTO);
+        medico.setId(id);
+        return convertToResponseDTO(medicoService.updateMedico(medico));
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteMedico(@PathVariable Long id) {
+        medicoService.deleteMedico(id);
+    }
+
     @GetMapping("/especialidade/{especialidade}")
     public List<MedicoResponseDTO> getMedicosByEspecialidade(@PathVariable Especialidade especialidade) {
         return medicoService.getMedicosByEspecialidade(especialidade).stream()

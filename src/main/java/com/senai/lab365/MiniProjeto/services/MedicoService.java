@@ -23,6 +23,14 @@ public class MedicoService {
         return medicoRepository.save(medico);
     }
 
+    public Medico updateMedico(Medico medico) {
+        return medicoRepository.save(medico);
+    }
+
+    public void deleteMedico(Long id) {
+        medicoRepository.deleteById(id);
+    }
+
     public List<Medico> getMedicosByEspecialidade(Especialidade especialidade) {
         return medicoRepository.findByEspecialidade(especialidade);
     }
