@@ -1,6 +1,10 @@
 package com.senai.lab365.MiniProjeto.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.web.bind.annotation.*;
 
 import com.senai.lab365.MiniProjeto.models.Medico;
@@ -9,6 +13,7 @@ import com.senai.lab365.MiniProjeto.services.MedicoService;
 import com.senai.lab365.MiniProjeto.dtos.MedicoRequestDTO;
 import com.senai.lab365.MiniProjeto.dtos.MedicoResponseDTO;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,17 +24,17 @@ public class MedicoController {
     @Autowired
     private MedicoService medicoService;
 
-    @GetMapping
-    public List<MedicoResponseDTO> getAllMedicos() {
-        return medicoService.getAllMedicos().stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
+    @Autowired
+    private PagedResourcesAssembler<Medico> pagedResourcesAssembler;
 
     @PostMapping
-    public MedicoResponseDTO createMedico(@RequestBody MedicoRequestDTO medicoRequestDTO) {
-        Medico medico = convertToEntity(medicoRequestDTO);
-        return convertToResponseDTO(medicoService.createMedico(medico));
+    public List<MedicoResponseDTO> createMedicos(@RequestBody List<MedicoRequestDTO> medicoRequestDTOs) {
+        List<Medico> medicos = medicoRequestDTOs.stream()
+                .map(this::convertToEntity)
+                .collect(Collectors.toList());
+        return medicoService.createMedicos(medicos).stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @PutMapping("/{id}")
@@ -44,25 +49,15 @@ public class MedicoController {
         medicoService.deleteMedico(id);
     }
 
-    @GetMapping("/especialidade/{especialidade}")
-    public List<MedicoResponseDTO> getMedicosByEspecialidade(@PathVariable Especialidade especialidade) {
-        return medicoService.getMedicosByEspecialidade(especialidade).stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @GetMapping("/nome/{nome}")
-    public List<MedicoResponseDTO> getMedicosByNome(@PathVariable String nome) {
-        return medicoService.getMedicosByNome(nome).stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
-
-    @GetMapping("/crm/{crm}")
-    public List<MedicoResponseDTO> getMedicosByCrm(@PathVariable String crm) {
-        return medicoService.getMedicosByCrm(crm).stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+    @GetMapping("/list")
+    public PagedModel<MedicoResponseDTO> getMedicos(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) Especialidade especialidade,
+            @RequestParam(required = false) LocalDate dataNascimento,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<Medico> medicosPage = medicoService.getMedicos(nome, especialidade, dataNascimento, PageRequest.of(page, size));
+        return pagedResourcesAssembler.toModel(medicosPage, new MedicoModelAssembler());
     }
 
     private Medico convertToEntity(MedicoRequestDTO dto) {
@@ -77,11 +72,8 @@ public class MedicoController {
 
     private MedicoResponseDTO convertToResponseDTO(Medico medico) {
         MedicoResponseDTO dto = new MedicoResponseDTO();
-        dto.setId(medico.getId());
         dto.setNome(medico.getNome());
-        dto.setCrm(medico.getCrm());
         dto.setDataNascimento(medico.getDataNascimento());
-        dto.setTelefone(medico.getTelefone());
         dto.setEspecialidade(medico.getEspecialidade());
         return dto;
     }

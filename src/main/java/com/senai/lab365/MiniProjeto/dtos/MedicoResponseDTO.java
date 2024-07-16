@@ -3,24 +3,13 @@ package com.senai.lab365.MiniProjeto.dtos;
 import java.time.LocalDate;
 
 import com.senai.lab365.MiniProjeto.models.Especialidade;
+import org.springframework.hateoas.RepresentationModel;
 
-public class MedicoResponseDTO {
+public class MedicoResponseDTO extends RepresentationModel<MedicoResponseDTO> {
 
-    private Long id;
     private String nome;
-    private String crm;
     private LocalDate dataNascimento;
-    private String telefone;
     private Especialidade especialidade;
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getNome() {
         return nome;
@@ -30,28 +19,12 @@ public class MedicoResponseDTO {
         this.nome = nome;
     }
 
-    public String getCrm() {
-        return crm;
-    }
-
-    public void setCrm(String crm) {
-        this.crm = crm;
-    }
-
     public LocalDate getDataNascimento() {
         return dataNascimento;
     }
 
     public void setDataNascimento(LocalDate dataNascimento) {
         this.dataNascimento = dataNascimento;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
     }
 
     public Especialidade getEspecialidade() {
