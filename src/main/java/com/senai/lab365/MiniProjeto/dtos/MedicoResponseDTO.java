@@ -7,9 +7,38 @@ import org.springframework.hateoas.RepresentationModel;
 
 public class MedicoResponseDTO extends RepresentationModel<MedicoResponseDTO> {
 
+    private Long id;
     private String nome;
     private LocalDate dataNascimento;
     private Especialidade especialidade;
+    private String crm;
+
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    private String telefone;
+
+    public String getCrm() {
+        return crm;
+    }
+
+    public void setCrm(String crm) {
+        this.crm = crm;
+    }
 
     public String getNome() {
         return nome;

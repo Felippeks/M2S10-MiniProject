@@ -2,17 +2,19 @@ package com.senai.lab365.MiniProjeto.controllers;
 
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
 import com.senai.lab365.MiniProjeto.models.Medico;
-import com.senai.lab365.MiniProjeto.dtos.MedicoResponseDTO;
+import com.senai.lab365.MiniProjeto.dtos.MedicoListDTO;
+import org.springframework.stereotype.Component;
 
-public class MedicoModelAssembler extends RepresentationModelAssemblerSupport<Medico, MedicoResponseDTO> {
+@Component
+public class MedicoModelAssembler extends RepresentationModelAssemblerSupport<Medico, MedicoListDTO> {
 
     public MedicoModelAssembler() {
-        super(MedicoController.class, MedicoResponseDTO.class);
+        super(MedicoController.class, MedicoListDTO.class);
     }
 
     @Override
-    public MedicoResponseDTO toModel(Medico entity) {
-        MedicoResponseDTO dto = new MedicoResponseDTO();
+    public MedicoListDTO toModel(Medico entity) {
+        MedicoListDTO dto = new MedicoListDTO();
         dto.setNome(entity.getNome());
         dto.setDataNascimento(entity.getDataNascimento());
         dto.setEspecialidade(entity.getEspecialidade());

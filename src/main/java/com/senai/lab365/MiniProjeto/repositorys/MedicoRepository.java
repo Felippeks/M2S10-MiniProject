@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.senai.lab365.MiniProjeto.models.Medico;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface MedicoRepository extends JpaRepository<Medico, Long> {
@@ -20,4 +21,5 @@ public interface MedicoRepository extends JpaRepository<Medico, Long> {
     Page<Medico> findByEspecialidadeAndDataNascimento(Especialidade especialidade, LocalDate dataNascimento, Pageable pageable);
     Page<Medico> findByNomeContainingIgnoreCaseAndEspecialidadeAndDataNascimento(String nome, Especialidade especialidade, LocalDate dataNascimento, Pageable pageable);
     Page<Medico> findByCrmContainingIgnoreCase(String crm, Pageable pageable);
+    Optional<Medico> findByCrm(String crm);
 }

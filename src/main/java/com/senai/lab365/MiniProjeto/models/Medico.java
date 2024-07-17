@@ -34,7 +34,6 @@ public class Medico {
         this.especialidade = especialidade;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

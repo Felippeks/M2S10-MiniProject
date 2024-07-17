@@ -11,6 +11,7 @@ import com.senai.lab365.MiniProjeto.repositorys.MedicoRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class MedicoService {
@@ -44,6 +45,18 @@ public class MedicoService {
 
     public Page<Medico> getMedicosByCrm(String crm, Pageable pageable) {
         return medicoRepository.findByCrmContainingIgnoreCase(crm, pageable);
+    }
+
+    public Medico getMedicoByCrm(String crm) {
+        return medicoRepository.findByCrm(crm).orElse(null);
+    }
+
+    public Optional<Medico> getMedicoById(Long id) {
+        return medicoRepository.findById(id);
+    }
+
+    public List<Medico> getAllMedicos() {
+        return medicoRepository.findAll();
     }
 
     public Page<Medico> getMedicos(String nome, Especialidade especialidade, LocalDate dataNascimento, Pageable pageable) {
