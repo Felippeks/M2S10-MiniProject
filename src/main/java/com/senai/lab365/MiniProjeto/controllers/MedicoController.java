@@ -1,13 +1,21 @@
 package com.senai.lab365.MiniProjeto.controllers;
 
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import jakarta.validation.Valid;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senai.lab365.MiniProjeto.dtos.MedicoListDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Validator;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.senai.lab365.MiniProjeto.models.Medico;
@@ -17,7 +25,9 @@ import com.senai.lab365.MiniProjeto.dtos.MedicoRequestDTO;
 import com.senai.lab365.MiniProjeto.dtos.MedicoResponseDTO;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,7 +36,13 @@ import java.util.stream.Collectors;
 public class MedicoController {
 
     @Autowired
+    private Validator validator;
+
+    @Autowired
     private MedicoService medicoService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private PagedResourcesAssembler<MedicoListDTO> pagedResourcesAssembler;
@@ -34,30 +50,65 @@ public class MedicoController {
     @Autowired
     private MedicoModelAssembler medicoModelAssembler;
 
+
     @PostMapping
-    public List<MedicoResponseDTO> createMedicos(@RequestBody List<MedicoRequestDTO> medicoRequestDTOs) {
-        List<Medico> medicos = medicoRequestDTOs.stream()
-                .map(this::convertToEntity)
-                .collect(Collectors.toList());
-        return medicoService.createMedicos(medicos).stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+    public ResponseEntity<?> createMedico(@Validated @RequestBody Object request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errorMessages = bindingResult.getAllErrors()
+                    .stream()
+                    .map(ObjectError::getDefaultMessage)
+                    .collect(Collectors.toList());
+            return ResponseEntity.badRequest().body(Map.of("errors", errorMessages));
+        }
+
+        List<MedicoResponseDTO> savedMedicos = new ArrayList<>();
+        try {
+            if (request instanceof Map) {
+                MedicoRequestDTO medicoRequestDTO = objectMapper.convertValue(request, MedicoRequestDTO.class);
+                Medico medico = convertToEntity(medicoRequestDTO);
+                Medico savedMedico = medicoService.createMedico(medico);
+                MedicoResponseDTO responseDTO = convertToResponseDTO(savedMedico);
+                savedMedicos.add(responseDTO);
+            } else if (request instanceof List) {
+                List<MedicoRequestDTO> medicoRequestDTOList = objectMapper.convertValue(request, new TypeReference<List<MedicoRequestDTO>>(){});
+                for (MedicoRequestDTO medicoRequestDTO : medicoRequestDTOList) {
+                    Medico medico = convertToEntity(medicoRequestDTO);
+                    Medico savedMedico = medicoService.createMedico(medico);
+                    MedicoResponseDTO responseDTO = convertToResponseDTO(savedMedico);
+                    savedMedicos.add(responseDTO);
+                }
+            } else {
+                return ResponseEntity.badRequest().body("Invalid request format.");
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error processing request: " + e.getMessage());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "mensagem", "Médico(s) cadastrado(s) com sucesso",
+                "medicos", savedMedicos
+        ));
     }
 
     @PutMapping("/{id}")
-    public MedicoResponseDTO updateMedico(@PathVariable Long id, @RequestBody MedicoRequestDTO medicoRequestDTO) {
+    public ResponseEntity<?> updateMedico(@PathVariable Long id, @RequestBody MedicoRequestDTO medicoRequestDTO) {
         Medico medico = convertToEntity(medicoRequestDTO);
         medico.setId(id);
-        return convertToResponseDTO(medicoService.updateMedico(medico));
+        Medico updatedMedico = medicoService.updateMedico(medico);
+        MedicoResponseDTO responseDTO = convertToResponseDTO(updatedMedico);
+        return ResponseEntity.ok(Map.of(
+                "mensagem", "Médico atualizado com sucesso",
+                "medico", responseDTO
+        ));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteMedico(@PathVariable Long id) {
+    public ResponseEntity<?> deleteMedico(@PathVariable Long id) {
         medicoService.deleteMedico(id);
+        return ResponseEntity.ok(Map.of("mensagem", "Médico deletado com sucesso"));
     }
 
     @GetMapping("/list")
-    public ResponseEntity<PagedModel<EntityModel<MedicoListDTO>>> getMedicos(
+    public ResponseEntity<Map<String, Object>> getMedicos(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) Especialidade especialidade,
             @RequestParam(required = false) LocalDate dataNascimento,
@@ -66,24 +117,36 @@ public class MedicoController {
         Page<Medico> medicosPage = medicoService.getMedicos(nome, especialidade, dataNascimento, PageRequest.of(page, size));
         Page<MedicoListDTO> medicoListDTOPage = medicosPage.map(medico -> medicoModelAssembler.toModel(medico));
         PagedModel<EntityModel<MedicoListDTO>> pagedModel = pagedResourcesAssembler.toModel(medicoListDTOPage);
-        return ResponseEntity.ok(pagedModel);
+        Map<String, Object> response = Map.of(
+                "mensagem", "Lista de médicos recuperada com sucesso",
+                "medicos", pagedModel);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/crm/{crm}")
-    public ResponseEntity<MedicoResponseDTO> getMedicoByCrm(@PathVariable String crm) {
-        Medico medico = medicoService.getMedicoByCrm(crm);
+    public ResponseEntity<Map<String, Object>> getMedicoByCrm(@PathVariable Integer crm) {
+        Medico medico = medicoService.getMedicoByCrm(String.valueOf(crm));
         if (medico != null) {
-            return ResponseEntity.ok(convertToResponseDTO(medico));
+            MedicoResponseDTO responseDTO = convertToResponseDTO(medico);
+            Map<String, Object> response = Map.of(
+                    "mensagem", "Médico encontrado com sucesso",
+                    "medico", responseDTO);
+            return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MedicoResponseDTO> getMedicoById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getMedicoById(@PathVariable Long id) {
         Optional<Medico> medico = medicoService.getMedicoById(id);
-        return medico.map(value -> ResponseEntity.ok(convertToResponseDTO(value)))
-                .orElseGet(() -> ResponseEntity.notFound().build());
+        return medico.map(value -> {
+            MedicoResponseDTO responseDTO = convertToResponseDTO(value);
+            Map<String, Object> response = Map.of(
+                    "mensagem", "Médico encontrado com sucesso",
+                    "medico", responseDTO);
+            return ResponseEntity.ok(response);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
@@ -97,7 +160,11 @@ public class MedicoController {
     private Medico convertToEntity(MedicoRequestDTO dto) {
         Medico medico = new Medico();
         medico.setNome(dto.getNome());
-        medico.setCrm(dto.getCrm());
+        try {
+            medico.setCrm(String.valueOf(Integer.parseInt(dto.getCrm())));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("CRM inválido");
+        }
         medico.setDataNascimento(dto.getDataNascimento());
         medico.setTelefone(dto.getTelefone());
         medico.setEspecialidade(dto.getEspecialidade());
@@ -115,11 +182,4 @@ public class MedicoController {
         return dto;
     }
 
-    private MedicoListDTO convertToMedicoListDTO(Medico medico) {
-        MedicoListDTO dto = new MedicoListDTO();
-        dto.setNome(medico.getNome());
-        dto.setDataNascimento(medico.getDataNascimento());
-        dto.setEspecialidade(medico.getEspecialidade());
-        return dto;
-    }
 }

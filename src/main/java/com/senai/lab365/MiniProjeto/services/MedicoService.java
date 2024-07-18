@@ -1,5 +1,6 @@
 package com.senai.lab365.MiniProjeto.services;
 
+import com.senai.lab365.MiniProjeto.exceptions.DataNascimentoInvalidaException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import com.senai.lab365.MiniProjeto.models.Especialidade;
 import com.senai.lab365.MiniProjeto.repositorys.MedicoRepository;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,14 +22,23 @@ public class MedicoService {
     private MedicoRepository medicoRepository;
 
     public Medico createMedico(Medico medico) {
+        validarDataNascimento(medico.getDataNascimento());
         return medicoRepository.save(medico);
     }
 
-    public List<Medico> createMedicos(List<Medico> medicos) {
-        return medicoRepository.saveAll(medicos);
+    public boolean validarDataNascimento(LocalDate dataNascimento) {
+        LocalDate hoje = LocalDate.now();
+        if (dataNascimento.isAfter(hoje)) {
+            throw new DataNascimentoInvalidaException("A data de nascimento não pode ser futura.");
+        }
+        if (Period.between(dataNascimento, hoje).getYears() < 18) {
+            throw new DataNascimentoInvalidaException("O médico deve ter pelo menos 18 anos.");
+        }
+        return true;
     }
 
     public Medico updateMedico(Medico medico) {
+        validarDataNascimento(medico.getDataNascimento());
         return medicoRepository.save(medico);
     }
 
@@ -35,17 +46,6 @@ public class MedicoService {
         medicoRepository.deleteById(id);
     }
 
-    public Page<Medico> getMedicosByEspecialidade(Especialidade especialidade, Pageable pageable) {
-        return medicoRepository.findByEspecialidade(especialidade, pageable);
-    }
-
-    public Page<Medico> getMedicosByNome(String nome, Pageable pageable) {
-        return medicoRepository.findByNomeContainingIgnoreCase(nome, pageable);
-    }
-
-    public Page<Medico> getMedicosByCrm(String crm, Pageable pageable) {
-        return medicoRepository.findByCrmContainingIgnoreCase(crm, pageable);
-    }
 
     public Medico getMedicoByCrm(String crm) {
         return medicoRepository.findByCrm(crm).orElse(null);
@@ -58,6 +58,7 @@ public class MedicoService {
     public List<Medico> getAllMedicos() {
         return medicoRepository.findAll();
     }
+
 
     public Page<Medico> getMedicos(String nome, Especialidade especialidade, LocalDate dataNascimento, Pageable pageable) {
         if (nome != null && especialidade != null && dataNascimento != null) {

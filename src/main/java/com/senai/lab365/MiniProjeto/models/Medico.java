@@ -1,6 +1,9 @@
 package com.senai.lab365.MiniProjeto.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 
 @Entity
@@ -11,15 +14,23 @@ public class Medico {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "O nome é obrigatório")
+    @Column(nullable = false)
     private String nome;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String crm;
 
+    @NotNull(message = "A data de nascimento é obrigatória")
+    @Column(nullable = false)
     private LocalDate dataNascimento;
 
+    @NotBlank(message = "O telefone é obrigatório")
+    @Column(nullable = false)
     private String telefone;
 
+    @NotNull(message = "A especialidade é obrigatória")
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Especialidade especialidade;
 
