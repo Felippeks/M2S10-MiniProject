@@ -1,8 +1,10 @@
 package com.senai.lab365.MiniProjeto.models;
 
+import com.senai.lab365.MiniProjeto.validation.ValidCrm;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
@@ -14,10 +16,12 @@ public class Medico {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "O nome é obrigatório")
+    @NotNull(message = "O nome é obrigatório")
     @Column(nullable = false)
     private String nome;
 
+    @ValidCrm
+    @NotNull(message = "O CRM é obrigatório")
     @Column(unique = true, nullable = false)
     private String crm;
 
@@ -25,8 +29,9 @@ public class Medico {
     @Column(nullable = false)
     private LocalDate dataNascimento;
 
-    @NotBlank(message = "O telefone é obrigatório")
+    @NotNull(message = "O telefone é obrigatório")
     @Column(nullable = false)
+    @Pattern(regexp = "^\\(?\\d{2}\\)?[\\s.-]?\\d{4,5}[\\s.-]?\\d{4}$", message = "O formato do telefone é inválido")
     private String telefone;
 
     @NotNull(message = "A especialidade é obrigatória")

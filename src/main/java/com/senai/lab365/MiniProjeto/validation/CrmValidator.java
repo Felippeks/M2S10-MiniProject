@@ -4,12 +4,11 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public class CrmValidator implements ConstraintValidator<ValidCrm, String> {
-
     @Override
     public boolean isValid(String crm, ConstraintValidatorContext context) {
         if (crm == null) {
             return false;
         }
-        return crm.matches("\\d{7}");
+        return crm.trim().matches("\\d{7}");
     }
 }
