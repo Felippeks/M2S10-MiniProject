@@ -1,5 +1,6 @@
 package com.senai.lab365.MiniProjeto.services;
 
+import com.senai.lab365.MiniProjeto.exceptions.CrmJaCadastradoException;
 import com.senai.lab365.MiniProjeto.exceptions.DataNascimentoInvalidaException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,10 +23,14 @@ public class MedicoService {
     private MedicoRepository medicoRepository;
 
     public Medico createMedico(Medico medico) {
+        Optional<Medico> medicoExistente = medicoRepository.findByCrm(medico.getCrm());
+        if (medicoExistente.isPresent()) {
+            throw new CrmJaCadastradoException("CRM já cadastrado: " + medico.getCrm());
+        }
+
         validarDataNascimento(medico.getDataNascimento());
         return medicoRepository.save(medico);
     }
-
     public boolean validarDataNascimento(LocalDate dataNascimento) {
         LocalDate hoje = LocalDate.now();
         if (dataNascimento.isAfter(hoje)) {
@@ -79,4 +84,6 @@ public class MedicoService {
             return medicoRepository.findAll(pageable);
         }
     }
+
+
 }

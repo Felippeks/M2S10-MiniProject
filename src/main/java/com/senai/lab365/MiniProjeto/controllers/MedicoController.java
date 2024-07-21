@@ -1,9 +1,7 @@
 package com.senai.lab365.MiniProjeto.controllers;
 
-import com.senai.lab365.MiniProjeto.validation.ValidCrm;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import jakarta.validation.Valid;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senai.lab365.MiniProjeto.dtos.MedicoListDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
