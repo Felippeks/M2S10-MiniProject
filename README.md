@@ -31,9 +31,12 @@ spring.jpa.hibernate.ddl-auto=update
 ````
 
 ## Como Executar
-Clonar o Repositório
+
 Para clonar o projeto para a sua máquina local, execute o seguinte comando no terminal:
 git clone https://github.com/Felippeks/M2S10-MiniProject.git
+
+## Documentação da API
+A documentação da API foi feita com Swagger e está disponível em http://localhost:8081/swagger-ui/index.html
 
 ## Compilar e Executar
 Dentro do diretório do projeto, execute os seguintes comandos para compilar e iniciar a aplicação:

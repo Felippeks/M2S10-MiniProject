@@ -1,5 +1,11 @@
 package com.senai.lab365.MiniProjeto.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +57,11 @@ public class MedicoController {
 
 
     @PostMapping
+    @Operation(summary = "Cria um novo médico", description = "Este endpoint é responsável por criar um novo registro de médico no sistema. Ele aceita um único médico ou uma lista de médicos.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Médico(s) criado(s) com sucesso", content = @Content(schema = @Schema(implementation = MedicoResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, verifique os dados enviados")
+    })
     public ResponseEntity<?> createMedico(@Validated @RequestBody Object request, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             List<String> errorMessages = bindingResult.getAllErrors()
@@ -59,7 +70,6 @@ public class MedicoController {
                     .collect(Collectors.toList());
             return ResponseEntity.badRequest().body(Map.of("errors", errorMessages));
         }
-
         List<MedicoResponseDTO> savedMedicos = new ArrayList<>();
         try {
             if (request instanceof Map) {
@@ -88,7 +98,14 @@ public class MedicoController {
         ));
     }
 
+
+
     @PutMapping("/{id}")
+    @Operation(summary = "Atualiza um médico", description = "Este endpoint é responsável por atualizar os dados de um médico baseado no ID fornecido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Médico atualizado com sucesso", content = @Content(schema = @Schema(implementation = MedicoResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Médico não encontrado")
+    })
     public ResponseEntity<?> updateMedico(@PathVariable Long id, @RequestBody MedicoRequestDTO medicoRequestDTO) {
         Medico medico = convertToEntity(medicoRequestDTO);
         medico.setId(id);
@@ -101,12 +118,20 @@ public class MedicoController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Deleta um médico", description = "Este endpoint é responsável por deletar um médico baseado no ID fornecido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Médico deletado com sucesso")
+    })
     public ResponseEntity<?> deleteMedico(@PathVariable Long id) {
         medicoService.deleteMedico(id);
         return ResponseEntity.ok(Map.of("mensagem", "Médico deletado com sucesso"));
     }
 
     @GetMapping("/list")
+    @Operation(summary = "Lista todos os médicos", description = "Este endpoint retorna uma lista com todos os médicos cadastrados no sistema em formato de paginação.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de médicos recuperada com sucesso", content = @Content(schema = @Schema(implementation = MedicoListDTO.class)))
+    })
     public ResponseEntity<Map<String, Object>> getMedicos(
             @RequestParam(required = false) String nome,
             @RequestParam(required = false) Especialidade especialidade,
@@ -123,6 +148,11 @@ public class MedicoController {
     }
 
     @GetMapping("/crm/{crm}")
+    @Operation(summary = "Obtém um médico pelo CRM", description = "Este endpoint retorna os dados de um médico baseado no CRM fornecido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Médico encontrado", content = @Content(schema = @Schema(implementation = MedicoResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Médico não encontrado")
+    })
     public ResponseEntity<Map<String, Object>> getMedicoByCrm(@PathVariable Integer crm) {
         Medico medico = medicoService.getMedicoByCrm(String.valueOf(crm));
         if (medico != null) {
@@ -137,6 +167,11 @@ public class MedicoController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtém um médico pelo ID", description = "Este endpoint retorna os dados de um médico baseado no ID fornecido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Médico encontrado", content = @Content(schema = @Schema(implementation = MedicoResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Médico não encontrado")
+    })
     public ResponseEntity<Map<String, Object>> getMedicoById(@PathVariable Long id) {
         Optional<Medico> medico = medicoService.getMedicoById(id);
         return medico.map(value -> {
@@ -149,12 +184,17 @@ public class MedicoController {
     }
 
     @GetMapping
-    public List<MedicoResponseDTO> getAllMedicos() {
+    @Operation(summary = "Lista todos os médicos", description = "Este endpoint retorna uma lista com todos os médicos cadastrados no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de médicos recuperada com sucesso", content = @Content(schema = @Schema(implementation = MedicoResponseDTO.class)))
+    })
+    public List<MedicoResponseDTO> getAllMedicos(@Parameter(description = "Nome do médico") @RequestParam(required = false) String nome) {
         List<Medico> medicos = medicoService.getAllMedicos();
         return medicos.stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }
+
 
     private Medico convertToEntity(MedicoRequestDTO dto) {
         Medico medico = new Medico();
